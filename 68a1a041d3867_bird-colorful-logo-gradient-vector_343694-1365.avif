@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شبكة الأخبار العالمية</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="index.php">شبكة الأخبار العالمية</a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.php">الرئيسية</a></li>
+                    <li class="dropdown">
+                        <a href="#">الأقسام <i class="fas fa-chevron-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <?php
+                            $sql = "SELECT * FROM categories";
+                            $result = $conn->query($sql);
+                            while($row = $result->fetch_assoc()) {
+                                echo '<li><a href="category.php?id='.$row['category_id'].'">'.$row['category_name'].'</a></li>';
+                            }
+                            ?>
+                        </ul>
+                    </li>
+                    <li><a href="about.php">من نحن</a></li>
+                    <li><a href="contact.php">اتصل بنا</a></li>
+                </ul>
+            </nav>
+            <div class="search-login">
+                <form action="search.php" method="GET" class="search-form">
+                    <input type="text" name="q" placeholder="ابحث...">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+                <?php if(isset($_SESSION['user_id'])): ?>
+                    <div class="user-menu">
+                        <span>مرحباً، <?php echo $_SESSION['username']; ?></span>
+                        <ul>
+                            <li><a href="profile.php">الملف الشخصي</a></li>
+                            <?php if($_SESSION['role'] === 'admin'): ?>
+                                <li><a href="admin/dashboard.php">لوحة التحكم</a></li>
+                            <?php endif; ?>
+                            <li><a href="logout.php">تسجيل الخروج</a></li>
+                        </ul>
+                    </div>
+                <?php else: ?>
+                    <div class="auth-buttons">
+                        <a href="login.php" class="btn">تسجيل الدخول</a>
+                        <a href="register.php" class="btn btn-outline">إنشاء حساب</a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </header>
+    <main class="container">

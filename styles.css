@@ -1,0 +1,52 @@
+<?php
+require_once 'includes/config.php';
+
+if(!isset($_GET['q']) || empty($_GET['q'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$search_query = $_GET['q'];
+require_once 'includes/header.php';
+?>
+
+<section class="search-results">
+    <h2>نتائج البحث عن: "<?php echo htmlspecialchars($search_query); ?>"</h2>
+    
+    <?php
+    $search_query = "%$search_query%";
+    $sql = "SELECT * FROM articles 
+            WHERE title LIKE ? OR content LIKE ? 
+            ORDER BY published_date DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $search_query, $search_query);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if($result->num_rows > 0) {
+        while($row = $result->fetch_assoc()):
+    ?>
+    <div class="search-result-item">
+        <h3><a href="article.php?id=<?php echo $row['article_id']; ?>"><?php echo $row['title']; ?></a></h3>
+        <p><?php echo substr($row['content'], 0, 200).'...'; ?></p>
+        <div class="search-meta">
+            <span class="category"><?php 
+                $cat_sql = "SELECT category_name FROM categories WHERE category_id = ".$row['category_id'];
+                $cat_result = $conn->query($cat_sql);
+                $cat_row = $cat_result->fetch_assoc();
+                echo $cat_row['category_name'];
+            ?></span>
+            <span class="date"><?php echo date('Y-m-d', strtotime($row['published_date'])); ?></span>
+        </div>
+    </div>
+    <?php
+        endwhile;
+    } else {
+        echo '<p>لم يتم العثور على نتائج مطابقة للبحث.</p>';
+    }
+    ?>
+</section>
+
+<?php
+require_once 'includes/footer.php';
+?>

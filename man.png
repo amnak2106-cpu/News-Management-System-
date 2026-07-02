@@ -1,0 +1,52 @@
+<?php
+
+function add_article($conn, $title, $content, $category_id, $author_id, $image_url = null) {
+    $stmt = $conn->prepare("INSERT INTO articles (title, content, category_id, author_id, image_url) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssiis", $title, $content, $category_id, $author_id, $image_url);
+    
+    if ($stmt->execute()) {
+        return $conn->insert_id;
+    } else {
+        return false;
+    }
+}
+
+function update_article($conn, $article_id, $title, $content, $category_id, $image_url = null) {
+    if ($image_url) {
+        $stmt = $conn->prepare("UPDATE articles SET title = ?, content = ?, category_id = ?, image_url = ? WHERE article_id = ?");
+        $stmt->bind_param("ssisi", $title, $content, $category_id, $image_url, $article_id);
+    } else {
+        $stmt = $conn->prepare("UPDATE articles SET title = ?, content = ?, category_id = ? WHERE article_id = ?");
+        $stmt->bind_param("ssii", $title, $content, $category_id, $article_id);
+    }
+    
+    return $stmt->execute();
+}
+
+function delete_article($conn, $article_id) {
+    $stmt = $conn->prepare("DELETE FROM articles WHERE article_id = ?");
+    $stmt->bind_param("i", $article_id);
+    return $stmt->execute();
+}
+
+function get_article($conn, $article_id) {
+    $stmt = $conn->prepare("SELECT * FROM articles WHERE article_id = ?");
+    $stmt->bind_param("i", $article_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+function get_all_articles($conn, $limit = null) {
+    $sql = "SELECT a.*, c.category_name, u.username 
+            FROM articles a
+            JOIN categories c ON a.category_id = c.category_id
+            JOIN users u ON a.author_id = u.user_id
+            ORDER BY a.published_date DESC";
+            
+    if ($limit) {
+        $sql .= " LIMIT " . (int)$limit;
+    }
+    
+    return $conn->query($sql);
+}
+?>

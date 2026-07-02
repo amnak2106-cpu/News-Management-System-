@@ -1,0 +1,69 @@
+<?php
+require_once 'includes/config.php';
+
+if(isset($_SESSION['user_id'])) {
+    header("Location: index.php");
+    exit();
+}
+
+$error = '';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = trim($_POST['username']);
+    $password = trim($_POST['password']);
+    
+    $sql = "SELECT * FROM users WHERE username = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if($result->num_rows == 1) {
+        $user = $result->fetch_assoc();
+        
+        if(password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
+            
+            header("Location: index.php");
+            exit();
+        } else {
+            $error = "كلمة المرور غير صحيحة.";
+        }
+    } else {
+        $error = "اسم المستخدم غير موجود.";
+    }
+}
+
+require_once 'includes/header.php';
+?>
+
+<section class="auth-form">
+    <h2>تسجيل الدخول</h2>
+    
+    <?php if(!empty($error)): ?>
+        <div class="alert alert-danger"><?php echo $error; ?></div>
+    <?php endif; ?>
+    
+    <form action="login.php" method="POST">
+        <div class="form-group">
+            <label for="username">اسم المستخدم</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">كلمة المرور</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-block">تسجيل الدخول</button>
+    </form>
+    
+    <div class="auth-links">
+        <p>ليس لديك حساب؟ <a href="register.php">إنشاء حساب</a></p>
+        <p><a href="forgot-password.php">هل نسيت كلمة المرور؟</a></p>
+    </div>
+</section>
+
+<?php
+require_once 'includes/footer.php';
+?>
